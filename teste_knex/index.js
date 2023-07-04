@@ -54,53 +54,48 @@ app.get('/', (req, res)=>{
     res.render('index');
 });
 
-app.post('/create_table', (req, res)=>{
+
+// rota precisa  == receber os dados -> 
+                        //-> tentar criar uma tabela no banco
+                            //-> esperar o retorno da criação ou não da tabela
+                                //-> enviar de volta a resposta sobre a criação da tabela 
+
+
+app.post('/create', async (req, res)=>{
     let table_name = req.body.table_name;
-    console.log(table_name);
+    console.log("table name -->",table_name);
 
-    knex.schema.createTable(table_name, function (table) {
-        table.timestamps();
-    }).then(response =>{
-        console.log(response);
-    }).catch(error =>{
-        console.log(error);
-    });
-
-    /*
-    let {email, name, points} = req.body; // destructuring json
-
-    let emailError;
-    let nameError;
-    let pointsError;
-
-    if(email == undefined || email == ''){
-        emailError = "email field cannot be empty";
-    }
-    if(name == undefined || name == ''){
-        nameError = "name field cannot be empty";
-    }
-    if(points == undefined || points == ''){
-        pointsError = "points field cannot be empty";
-    }
-
-    if(emailError != undefined || nameError != undefined || pointsError != undefined){
-        req.flash('emailError', emailError);
-        req.flash('nameError', nameError);
-        req.flash('pointsError', pointsError);
-
-        req.flash('name', name);
-        req.flash('email', email);
-        req.flash('points', points);
-
-        res.redirect('/');
-    }else{
-        res.json({
-            status : 200,
-            statusText : "OK"
+    let exists = await knex.schema.hasTable(table_name).then(exists =>{return exists});
+    console.log("exists -->",exists);
+    if (!exists){
+        knex.schema.createTable(table_name, (table)=>{
+            table.increments('id').primary();
+            table.timestamps();
+        })
+        .then(data =>{
+            res.json({
+                status : 200,
+                statusText : "OK",
+                message : "Table created successfully"
+            });  
+        })
+        .catch(err =>{
+            res.send(err);
         });
+    }else{
+        res.json({message :'Table alredy exists'});   
     }
-    */
+});
 
+app.get('/tables', (req, res)=>{
+    
+    async function list_tables(){
+        let response = await knex.raw("show tables").then(res =>{return res[0]});
+        console.log("response ->",response);
+        res.send(response);  
+    }
+
+    list_tables();
 });
 
 
