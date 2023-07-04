@@ -63,7 +63,6 @@ app.get('/', (req, res)=>{
 
 app.post('/create', async (req, res)=>{
     let table_name = req.body.table_name;
-    console.log("table name -->",table_name);
 
     let exists = await knex.schema.hasTable(table_name).then(exists =>{return exists});
     console.log("exists -->",exists);
@@ -91,11 +90,27 @@ app.get('/tables', (req, res)=>{
     
     async function list_tables(){
         let response = await knex.raw("show tables").then(res =>{return res[0]});
-        console.log("response ->",response);
         res.send(response);  
     }
 
     list_tables();
+});
+
+app.delete('/delete/:table_name', (req, res)=>{
+    
+    let table = req.params.table_name;
+    console.log(table);
+
+    knex.schema.dropTable(table)
+    .then(response =>{
+        console.log(res);
+        res.json({ message :"Deleted table"});
+    })
+    .catch(err =>{
+        console.log(err);
+        res.json({message : "Failed to delete table"});
+    });
+    
 });
 
 
